@@ -1,0 +1,50 @@
+@import "tailwindcss";
+@import '@mantine/core/styles.css';
+@import '@mantine/dropzone/styles.css';
+
+@font-face {
+    font-family: "Geist";
+    src: local("Geist"), url("./assets/fonts/Geist-Black.ttf") format("truetype");
+}
+
+@font-face {
+    font-family: "Geist";
+    font-weight: 800;
+    src: local("Geist"), url("./assets/fonts/Geist-Bold.ttf") format("truetype");
+}
+
+@font-face {
+    font-family: "Geist";
+    font-weight: 900;
+    src: local("Geist"), url("./assets/fonts/Geist-ExtraBold.ttf") format("truetype");
+}
+
+@font-face {
+    font-family: "Geist";
+    font-weight: 200;
+    src: local("Geist"), url("./assets/fonts/Geist-ExtraLight.ttf") format("truetype");
+}
+
+@font-face {
+    font-family: "Geist";
+    font-weight: 400;
+    src: local("Geist"), url("./assets/fonts/Geist-Regular.ttf") format("truetype");
+}
+
+@font-face {
+  font-family: "Geist";
+  font-weight: 500;
+  src: local("Geist"), url("./assets/fonts/Geist-Medium.ttf") format("truetype");
+}
+
+@layer base {
+    html {
+        font-family: 'Geist', sans-serif;
+        scroll-behavior: smooth;
+    }
+
+    body {
+        @apply antialiased;
+    }
+}
+
