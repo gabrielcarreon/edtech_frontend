@@ -28,7 +28,7 @@ const subjects = [
 ];
 
 export const CourseSelection: React.FC = (): JSX.Element => {
-  const { setStep, selected, setCourse, setTitle, setDescription } = useContext(NewQuizContext);
+  const { setStep, selected, setCourse, course, title, setTitle, setDescription } = useContext(NewQuizContext);
   return (
     <div className="max-w-2xl mx-auto space-y-8">
       <div className="text-center space-y-4">
@@ -59,12 +59,15 @@ export const CourseSelection: React.FC = (): JSX.Element => {
             />
           </div>
           <TextInput
+            onChange={e => setTitle(e.target.value)}
             withAsterisk
             mt="md"
             label="Quiz title"
             placeholder="Real estate laws..."
           />
           <Textarea
+            rows={5}
+            onChange={e => setDescription(e.target.value)}
             label="Description"
             description="Add short description here or instructions."
           />
@@ -73,7 +76,6 @@ export const CourseSelection: React.FC = (): JSX.Element => {
               <Button
                 variant="outline"
                 color="black"
-                h={40}
                 bd="1px solid gray"
                 onClick={() => setStep(2)}
                 fullWidth
@@ -83,7 +85,7 @@ export const CourseSelection: React.FC = (): JSX.Element => {
             <div className="order-1 md:order-2 w-full">
               {selected === "ai" ? (
                 <Button
-                  h={40}
+                  disabled={!title || title === "" || !course || course === ""}
                   fullWidth
                   variant="gradient"
                   gradient={{ from: 'blue', to: 'violet', deg: 90 }}

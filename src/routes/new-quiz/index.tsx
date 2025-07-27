@@ -41,9 +41,7 @@ const NewQuiz: React.FC = (): JSX.Element => {
       title, setTitle,
       description, setDescription
     }}>
-      <div className="min-h-screen p-6 bg-gray-50">
-        {step_map[String(step)]}
-      </div>
+      {step_map[String(step)]}
     </NewQuizContext.Provider>
   );
 };

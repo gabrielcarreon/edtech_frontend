@@ -1,5 +1,5 @@
 import * as React from "react";
-import { JSX, useContext, useEffect, useMemo, useState } from "react";
+import { JSX, useContext, useMemo } from "react";
 import {
   LuArrowLeft,
   LuBrain,
@@ -23,6 +23,12 @@ import { NumberInputForm } from "@/components/forms/-number-input-form.tsx";
 import { TextareaForm } from "@/components/forms/-text-area-form.tsx";
 import * as z from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useMutation } from "@tanstack/react-query";
+import { instance } from "@/lib/utils/axios_instance.ts"
+import { base_url } from "@/lib/constants.ts";
+import { handle_errors } from "../../lib/utils/handle_errors.ts";
+import { DropzoneForm } from "../../components/forms/-dropzone-form.tsx";
+import { notifications } from "@mantine/notifications";
 
 const QuestionTypes: React.FC = ({ form, children, title, description, name }: {
   form: UseFormReturn,
@@ -72,9 +78,7 @@ const TotalQuestionCounter: React.FC = ({ form }: { form: UseFormReturn }): JSX.
 };
 
 const form_resolver = z.object({
-  course: z.coerce.string().max(255).min(1),
-  program: z.coerce.string().max(255).min(1),
-  focus_areas: z.coerce.string().max(1).min(1),
+  focus_areas: z.coerce.string().max(255),
   difficulty: z.enum(["easy", "moderate", "hard", "mixed"]),
   question_type: z.object({
     fill_in_the_blank: z.coerce.number(),
@@ -85,16 +89,31 @@ const form_resolver = z.object({
 });
 
 export const AiQuizGeneration: React.FC = () => {
-  const { program, course, title, description } = useContext(NewQuizContext);
+  const { program, course, selected, title, description, setStep } = useContext(NewQuizContext);
+  const { isPending, mutate } = useMutation({
+    mutationFn: async (variables) => {
+      const response = await instance.post(`${base_url}/quizzes/`, variables, {
+        headers: { "Content-Type": "application/json" }
+      });
+      return response.data;
+    },
+    mutationKey: ["ai_generate_quiz"],
+    onError: ({ response }) =>  {
+      handle_errors(response)
+    }
+  });
+
   const form = useForm({
     mode: "onSubmit",
     resolver: zodResolver(form_resolver),
     defaultValues: {
+      type: selected,
       title: title,
       description: description,
       course: course,
       program: program,
       difficulty: "mixed",
+      attachments: [],
       question_type: {
         fill_in_the_blank: 0,
         essay_question: 0,
@@ -110,13 +129,23 @@ export const AiQuizGeneration: React.FC = () => {
       if (!r) {
         console.log(form.formState.errors);
       } else {
-        console.log(form.getValues());
+        mutate(form.getValues(), {
+          onSuccess: data => {
+            console.log(data);
+            notifications.show({
+              title: "Your quiz is ready to view.",
+              message: (
+                <a href={`/quizzes/${data.id}/edit-quiz`} target="_blank" rel="noreferrer">{data.title}</a>
+              )
+            })
+          }
+        });
       }
     });
   };
 
   return (
-    <>
+    <form onSubmit={form.handleSubmit(handleSubmit)}>
       <div className="max-w-2xl mx-auto space-y-8">
         <div className="text-center space-y-4">
           <div
@@ -141,35 +170,7 @@ export const AiQuizGeneration: React.FC = () => {
           </Group>
           <p className="text-sm text-gray-600">Upload PDFs, Word documents, or text files or containing the content for
             your quiz generation</p>
-          <Dropzone
-            mt={20}
-            onDrop={(files) => console.log("accepted files", files)}
-            onReject={(files) => console.log("rejected files", files)}
-            maxSize={20 * 1024 ** 2}
-            accept={[
-              ...PDF_MIME_TYPE, ...MS_WORD_MIME_TYPE, ...MS_POWERPOINT_MIME_TYPE,
-            ]}
-          >
-            <Group justify="center" gap="xl" mih={220} style={{ pointerEvents: "none" }}>
-              <Dropzone.Accept>
-                <LuCloudUpload size={52} color="var(--mantine-color-blue-6)" stroke="1.5" />
-              </Dropzone.Accept>
-              <Dropzone.Reject>
-                <LuX size={52} color="var(--mantine-color-red-6)" stroke="1.5" />
-              </Dropzone.Reject>
-              <Dropzone.Idle>
-                <LuFile size={52} color="var(--mantine-color-dimmed)" stroke="1.5" />
-              </Dropzone.Idle>
-              <div>
-                <Text ta="center" size="xl" inline>
-                  Drag files here or click to select files
-                </Text>
-                <Text ta="center" size="sm" c="dimmed" inline mt={7}>
-                  Attach as many files as you like, each file should not exceed 50mb
-                </Text>
-              </div>
-            </Group>
-          </Dropzone>
+          <DropzoneForm form={form} name="attachments"/>
         </Stack>
       </Paper>
       <Paper mt={28}>
@@ -236,7 +237,7 @@ export const AiQuizGeneration: React.FC = () => {
             placeholder="Pick value"
             data={[
               { label: "Easy", value: "easy" },
-              { label: "Moderate", value: "Moderate" },
+              { label: "Moderate", value: "moderate" },
               { label: "Hard", value: "hard" },
               { label: "Mixed", value: "mixed" },
             ]}
@@ -253,15 +254,18 @@ export const AiQuizGeneration: React.FC = () => {
       </Paper>
       <div className="block md:flex gap-4">
         <button
-          onClick={handleSubmit}
-          className="order-2 cursor-pointer hover:bg-purple-700 transition-all flex rounded-md bg-purple-600 disabled:bg-purple-300 mt-4 w-full p-3 text-white justify-center items-center gap-4">
+          type="submit"
+          disabled={isPending}
+          className="order-2 cursor-pointer disabled:pointer-events-none hover:bg-purple-700 transition-all flex rounded-md bg-purple-600 disabled:bg-purple-300 mt-4 w-full p-3 text-white justify-center items-center gap-4">
           <LuWand />
           <span className="font-medium text-sm">Generate Professional Quiz</span></button>
         <button
+          onClick={() => setStep(3)}
+          type="button"
           className="order-1 flex hover:bg-gray-200/30 transition-all cursor-pointer rounded-md bg-white text-black border border-gray-500/30 text-black mt-4 w-full p-3 justify-center items-center gap-4">
           <LuArrowLeft />
           <span className="font-medium text-sm">Back to Setup</span></button>
       </div>
-    </>
+    </form>
   );
 };

@@ -16,8 +16,7 @@ const courses: CoursesType[] = [
 ];
 
 export const ProgramSelection = () => {
-  const { setStep, form, program, setProgram } = useContext(NewQuizContext);
-
+  const { setStep, program, setProgram } = useContext(NewQuizContext);
   return (
     <Stack>
       <div className="mx-auto flex flex-col items-center gap-6">
@@ -25,7 +24,7 @@ export const ProgramSelection = () => {
           <LuBook size={36} />
         </ThemeIcon>
         <div>
-          <h1 className="text-center text-3xl font-semibold">Select Course</h1>
+          <h1 className="text-center text-3xl font-semibold">Select Program</h1>
           <p className="text-center text-gray-600">Choose your course that best matches your quiz category</p>
         </div>
       </div>
@@ -49,15 +48,14 @@ export const ProgramSelection = () => {
           variant="outline"
           color="black"
           bd="1px solid gray"
-          h={50}
         >Back to Mode Selection</Button>
         <Button
+          disabled={!program}
           onClick={() => setStep(3)}
           rightSection={<LuArrowRight />}
           variant="gradient"
           gradient={{ from: "blue", to: "violet", deg: 90 }}
           color="black"
-          h={50}
         >Continue to Quiz Setup</Button>
       </Group>
     </Stack>
